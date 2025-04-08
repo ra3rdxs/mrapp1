@@ -23,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadData();
+    _checkNotificationPermissions();
   }
 
   Future<void> _loadData() async {
@@ -48,6 +49,22 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error loading data: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _checkNotificationPermissions() async {
+    final hasPermission = await _reminderService.notificationService
+        .checkAndRequestPermissions(context);
+    if (!hasPermission) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Notification permission is required for medicine reminders',
+            ),
+          ),
         );
       }
     }
@@ -128,24 +145,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _testNotification(MedicineReminder reminder) async {
     try {
+      final hasPermission = await _reminderService.notificationService
+          .checkAndRequestPermissions(context);
+
+      if (!hasPermission) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot send notification: Permission denied'),
+          ),
+        );
+        return;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sending test notification...')),
       );
 
-      // Directly use the notification service for testing
       final notificationService = _reminderService.notificationService;
-      // Make sure it's initialized
       await notificationService.initialize();
 
-      // Generate a random ID for the test notification
       final testId = DateTime.now().millisecondsSinceEpoch % 10000;
 
-      // Send an immediate test notification
-      await notificationService.scheduleNotification(
+      await notificationService.showImmediateNotification(
         id: testId,
         title: 'TEST: ${reminder.medicineName}',
         body: 'This is a test notification. Dosage: ${reminder.dosage}',
-        scheduledDate: DateTime.now(),
       );
 
       ScaffoldMessenger.of(context).showSnackBar(

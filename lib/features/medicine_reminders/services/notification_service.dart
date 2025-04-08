@@ -1,6 +1,8 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:flutter/material.dart';
+import 'dart:io' show Platform;
 
 class NotificationService {
   static NotificationService? _instance;
@@ -195,5 +197,101 @@ class NotificationService {
   Future<void> cancelAllNotifications() async {
     await _flutterLocalNotificationsPlugin.cancelAll();
     print('All notifications canceled');
+  }
+
+  Future<bool> requestPermission() async {
+    // Ensure the service is initialized
+    if (!_isInitialized) {
+      await initialize();
+    }
+
+    // For iOS
+    if (Platform.isIOS) {
+      final bool? result = await _flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
+      return result ?? false;
+    }
+    // For Android
+    else if (Platform.isAndroid) {
+      // Android 13+ (API level 33) requires explicit permission request
+      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+          _flutterLocalNotificationsPlugin
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >();
+
+      final bool? grantedNotificationPermission =
+          await androidImplementation?.requestNotificationsPermission();
+      return grantedNotificationPermission ?? false;
+    }
+
+    return false;
+  }
+
+  // Check if notifications are permitted
+  Future<bool> areNotificationsPermitted() async {
+    if (Platform.isIOS) {
+      // iOS permission check - we'll need to check directly
+      final bool? result = await _flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: false, badge: false, sound: false);
+
+      // If null or false, permissions are not granted
+      return result ?? false;
+    } else if (Platform.isAndroid) {
+      // Android permission check
+      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+          _flutterLocalNotificationsPlugin
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >();
+      final bool? areEnabled =
+          await androidImplementation?.areNotificationsEnabled();
+      return areEnabled ?? false;
+    }
+    return false;
+  }
+
+  // This method checks if permissions are granted and requests them if they aren't
+  Future<bool> checkAndRequestPermissions(BuildContext context) async {
+    final bool hasPermission = await areNotificationsPermitted();
+
+    if (!hasPermission) {
+      // Show dialog explaining why we need permissions
+      final bool shouldRequest =
+          await showDialog<bool>(
+            context: context,
+            builder:
+                (context) => AlertDialog(
+                  title: const Text('Notification Permission'),
+                  content: const Text(
+                    'To receive medicine reminders, you need to allow notifications. Would you like to enable notifications?',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('No, thanks'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Yes, enable'),
+                    ),
+                  ],
+                ),
+          ) ??
+          false;
+
+      if (shouldRequest) {
+        return await requestPermission();
+      }
+      return false;
+    }
+
+    return true;
   }
 }
