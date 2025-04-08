@@ -1,16 +1,136 @@
-# mrapp
+# Medicine Reminder App
 
-A new Flutter project.
+A Flutter application for managing medication reminders with local notifications.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- Create and manage medicine reminders
+- Receive notifications when it's time to take medication
+- Store reminder data locally on the device
+- Simple, intuitive user interface
 
-A few resources to get you started if this is your first Flutter project:
+## Getting Started with FVM (Flutter Version Manager)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+This project uses FVM to ensure consistent Flutter SDK versions across development environments.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Prerequisites
+
+- [Git](https://git-scm.com/downloads)
+- [Flutter](https://docs.flutter.dev/get-started/install) (base installation)
+- [Android Studio](https://developer.android.com/studio) with Android SDK
+- [VS Code](https://code.visualstudio.com/download) (recommended)
+
+### Installing FVM
+
+#### Windows
+
+**Using Chocolatey (Recommended)**
+
+```
+choco install fvm
+```
+
+#### macOS
+
+**Option 1: Using Install Script**
+
+```
+curl -fsSL https://fvm.app/install.sh | bash
+```
+
+**Option 2: Using Homebrew**
+
+```
+brew tap leoafarias/fvm
+brew install fvm
+```
+
+#### Linux
+
+**Using Install Script**
+
+```
+curl -fsSL https://fvm.app/install.sh | bash
+```
+
+### Project Setup
+
+1. **Clone the repository**:
+
+   ```
+   git clone https://github.com/ra3rdxs/mrapp1.git
+   cd mrapp1
+   ```
+
+2. **Set up the project with FVM**:
+
+   ```
+   fvm install 3.24.0
+   fvm use 3.24.0
+   fvm flutter pub get
+   ```
+
+3. **Configure VS Code** (create `.vscode/settings.json`):
+
+   ```json
+   {
+     "dart.flutterSdkPath": ".fvm/versions/3.24.0"
+   }
+   ```
+
+4. **Run the app**:
+   ```
+   fvm flutter run
+   ```
+
+## Project Structure
+
+```
+lib/
+├── features/
+│   ├── auth/ - Authentication feature
+│   │   ├── models/
+│   │   ├── screens/
+│   │   └── services/
+│   └── medicine_reminders/ - Medicine reminder feature
+│       ├── models/ - Data models
+│       ├── screens/ - UI screens
+│       ├── services/ - Backend services
+│       └── widgets/ - Reusable UI components
+├── shared/ - Shared utilities and components
+└── main.dart - Entry point
+```
+
+## Notifications
+
+The app uses the Flutter Local Notifications plugin to schedule medicine reminders. The notification service handles:
+
+- Permission requests for notifications
+- Scheduling notifications based on reminder times
+- Canceling notifications when reminders are deleted or updated
+
+## Troubleshooting
+
+### FVM Issues
+
+- **FVM not found**: Ensure it's added to your PATH
+- **Version conflicts**: Run `fvm flutter doctor` to check your setup
+
+### Dependency Issues
+
+```
+fvm flutter clean
+fvm flutter pub get
+```
+
+### Android Emulator Issues
+
+- Create a new AVD in Android Studio
+- Ensure Intel HAXM is installed for hardware acceleration
+
+## Development Commands
+
+- **Run the app**: `fvm flutter run`
+- **Build APK**: `fvm flutter build apk`
+- **Check dependencies**: `fvm flutter pub outdated`
+- **Run tests**: `fvm flutter test`
