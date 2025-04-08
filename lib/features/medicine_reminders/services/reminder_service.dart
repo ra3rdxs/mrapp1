@@ -5,11 +5,12 @@ import 'notification_service.dart';
 
 class ReminderService {
   static const String _remindersKey = 'medicine_reminders';
-  final NotificationService _notificationService = NotificationService();
+  // Make notification service accessible from outside
+  final NotificationService notificationService = NotificationService();
 
   // Initialize notification service
   Future<void> init() async {
-    await _notificationService.initialize();
+    await notificationService.initialize();
   }
 
   // Get all reminders
@@ -32,19 +33,26 @@ class ReminderService {
     await _saveReminders(reminders);
 
     // Schedule notification
-    await _notificationService.scheduleNotification(
-      id: reminder.id.hashCode,
-      title: 'Medicine Reminder',
-      body:
-          'Time to take ${reminder.medicineName}${reminder.dosage.isNotEmpty ? ' - ${reminder.dosage}' : ''}',
-      scheduledDate: DateTime(
-        reminder.date.year,
-        reminder.date.month,
-        reminder.date.day,
-        reminder.time.hour,
-        reminder.time.minute,
-      ),
+    final DateTime notificationTime = DateTime(
+      reminder.date.year,
+      reminder.date.month,
+      reminder.date.day,
+      reminder.time.hour,
+      reminder.time.minute,
     );
+
+    // Check if the notification time is in the future
+    if (notificationTime.isAfter(DateTime.now())) {
+      await notificationService.scheduleNotification(
+        id: reminder.id.hashCode,
+        title: 'Medicine Reminder',
+        body:
+            'Time to take ${reminder.medicineName}${reminder.dosage.isNotEmpty ? ' - ${reminder.dosage}' : ''}',
+        scheduledDate: notificationTime,
+      );
+    } else {
+      print('Notification time is in the past: $notificationTime');
+    }
   }
 
   // Update an existing reminder
@@ -57,22 +65,29 @@ class ReminderService {
       await _saveReminders(reminders);
 
       // Cancel previous notification and schedule a new one
-      await _notificationService.cancelNotification(
-        updatedReminder.id.hashCode,
+      await notificationService.cancelNotification(updatedReminder.id.hashCode);
+
+      // Schedule notification
+      final DateTime notificationTime = DateTime(
+        updatedReminder.date.year,
+        updatedReminder.date.month,
+        updatedReminder.date.day,
+        updatedReminder.time.hour,
+        updatedReminder.time.minute,
       );
-      await _notificationService.scheduleNotification(
-        id: updatedReminder.id.hashCode,
-        title: 'Medicine Reminder',
-        body:
-            'Time to take ${updatedReminder.medicineName}${updatedReminder.dosage.isNotEmpty ? ' - ${updatedReminder.dosage}' : ''}',
-        scheduledDate: DateTime(
-          updatedReminder.date.year,
-          updatedReminder.date.month,
-          updatedReminder.date.day,
-          updatedReminder.time.hour,
-          updatedReminder.time.minute,
-        ),
-      );
+
+      // Check if the notification time is in the future
+      if (notificationTime.isAfter(DateTime.now())) {
+        await notificationService.scheduleNotification(
+          id: updatedReminder.id.hashCode,
+          title: 'Medicine Reminder',
+          body:
+              'Time to take ${updatedReminder.medicineName}${updatedReminder.dosage.isNotEmpty ? ' - ${updatedReminder.dosage}' : ''}',
+          scheduledDate: notificationTime,
+        );
+      } else {
+        print('Updated notification time is in the past: $notificationTime');
+      }
     }
   }
 
@@ -83,7 +98,7 @@ class ReminderService {
     await _saveReminders(reminders);
 
     // Cancel notification
-    await _notificationService.cancelNotification(id.hashCode);
+    await notificationService.cancelNotification(id.hashCode);
   }
 
   // Save reminders to SharedPreferences

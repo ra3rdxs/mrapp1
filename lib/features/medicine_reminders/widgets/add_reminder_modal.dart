@@ -3,7 +3,9 @@ import 'package:intl/intl.dart';
 import '../models/reminder.dart';
 
 class AddReminderModal extends StatefulWidget {
-  const AddReminderModal({super.key});
+  final MedicineReminder? reminder;
+
+  const AddReminderModal({super.key, this.reminder});
 
   @override
   State<AddReminderModal> createState() => _AddReminderModalState();
@@ -15,8 +17,30 @@ class _AddReminderModalState extends State<AddReminderModal> {
   final _dosageController = TextEditingController();
   final _notesController = TextEditingController();
 
-  TimeOfDay _selectedTime = TimeOfDay.now();
-  DateTime _selectedDate = DateTime.now();
+  late TimeOfDay _selectedTime;
+  late DateTime _selectedDate;
+  late String _reminderId;
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // If we have an existing reminder, populate the form with its data
+    if (widget.reminder != null) {
+      _isEditing = true;
+      _reminderId = widget.reminder!.id;
+      _medicineNameController.text = widget.reminder!.medicineName;
+      _dosageController.text = widget.reminder!.dosage;
+      _notesController.text = widget.reminder!.notes;
+      _selectedTime = widget.reminder!.time;
+      _selectedDate = widget.reminder!.date;
+    } else {
+      _reminderId = DateTime.now().millisecondsSinceEpoch.toString();
+      _selectedTime = TimeOfDay.now();
+      _selectedDate = DateTime.now();
+    }
+  }
 
   @override
   void dispose() {
@@ -62,8 +86,8 @@ class _AddReminderModalState extends State<AddReminderModal> {
 
   void _saveReminder() {
     if (_formKey.currentState!.validate()) {
-      final newReminder = MedicineReminder(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
+      final reminder = MedicineReminder(
+        id: _reminderId,
         medicineName: _medicineNameController.text.trim(),
         time: _selectedTime,
         date: _selectedDate,
@@ -71,7 +95,7 @@ class _AddReminderModalState extends State<AddReminderModal> {
         notes: _notesController.text.trim(),
       );
 
-      Navigator.of(context).pop(newReminder);
+      Navigator.of(context).pop(reminder);
     }
   }
 
@@ -93,9 +117,12 @@ class _AddReminderModalState extends State<AddReminderModal> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Add Medicine Reminder',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Text(
+                _isEditing ? 'Edit Medicine Reminder' : 'Add Medicine Reminder',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -171,7 +198,7 @@ class _AddReminderModalState extends State<AddReminderModal> {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: const Text('Save Reminder'),
+                child: Text(_isEditing ? 'Update Reminder' : 'Save Reminder'),
               ),
               const SizedBox(height: 16),
               TextButton(

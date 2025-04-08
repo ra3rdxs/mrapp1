@@ -96,6 +96,72 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _editReminder(MedicineReminder reminder) async {
+    final result = await showModalBottomSheet<MedicineReminder>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => AddReminderModal(reminder: reminder),
+    );
+
+    if (result != null) {
+      try {
+        await _reminderService.updateReminder(result);
+        await _loadData();
+
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Reminder updated')));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error updating reminder: ${e.toString()}')),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _testNotification(MedicineReminder reminder) async {
+    try {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sending test notification...')),
+      );
+
+      // Directly use the notification service for testing
+      final notificationService = _reminderService.notificationService;
+      // Make sure it's initialized
+      await notificationService.initialize();
+
+      // Generate a random ID for the test notification
+      final testId = DateTime.now().millisecondsSinceEpoch % 10000;
+
+      // Send an immediate test notification
+      await notificationService.scheduleNotification(
+        id: testId,
+        title: 'TEST: ${reminder.medicineName}',
+        body: 'This is a test notification. Dosage: ${reminder.dosage}',
+        scheduledDate: DateTime.now(),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Test notification sent! Check your notifications.'),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error sending test notification: ${e.toString()}'),
+        ),
+      );
+    }
+  }
+
   String _formatTime(TimeOfDay time) {
     final now = DateTime.now();
     final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
@@ -220,11 +286,57 @@ class _HomeScreenState extends State<HomeScreen> {
                                           color: Colors.white,
                                         ),
                                       ),
-                                      trailing: IconButton(
-                                        icon: const Icon(Icons.more_vert),
-                                        onPressed: () {
-                                          // Show options for the reminder
+                                      trailing: PopupMenuButton<String>(
+                                        onSelected: (value) {
+                                          if (value == 'edit') {
+                                            _editReminder(reminder);
+                                          } else if (value == 'delete') {
+                                            _deleteReminder(reminder);
+                                          } else if (value == 'test') {
+                                            _testNotification(reminder);
+                                          }
                                         },
+                                        itemBuilder:
+                                            (context) => [
+                                              const PopupMenuItem(
+                                                value: 'edit',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.edit),
+                                                    SizedBox(width: 8),
+                                                    Text('Edit'),
+                                                  ],
+                                                ),
+                                              ),
+                                              const PopupMenuItem(
+                                                value: 'delete',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.delete,
+                                                      color: Colors.red,
+                                                    ),
+                                                    SizedBox(width: 8),
+                                                    Text(
+                                                      'Delete',
+                                                      style: TextStyle(
+                                                        color: Colors.red,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const PopupMenuItem(
+                                                value: 'test',
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.notifications),
+                                                    SizedBox(width: 8),
+                                                    Text('Test'),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
                                       ),
                                     ),
                                   ),
