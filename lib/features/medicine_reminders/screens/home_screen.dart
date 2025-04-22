@@ -211,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Medicine Reminders'),
+        title: const Text('Medicine Reminders APP'),
         actions: [
           IconButton(onPressed: _loadData, icon: const Icon(Icons.refresh)),
         ],
@@ -257,7 +257,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ElevatedButton.icon(
                                     onPressed: _addReminder,
                                     icon: const Icon(Icons.add),
-                                    label: const Text('Add a Reminder'),
+                                    label: const Text('Add New Reminder'),
                                   ),
                                 ],
                               ),

@@ -25,7 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     if (_usernameController.text.trim().isEmpty) {
       setState(() {
-        _errorMessage = 'Please enter a username';
+        _errorMessage = 'Please Enter your Name: ';
       });
       return;
     }

@@ -1,4 +1,4 @@
-package com.mrapp.mrapp
+package com.mrapp
 
 import io.flutter.embedding.android.FlutterActivity
 

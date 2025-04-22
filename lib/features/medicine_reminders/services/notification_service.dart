@@ -75,7 +75,7 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
           IOSFlutterLocalNotificationsPlugin
         >()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
+        ?.requestPermissions(alert: true, badge: true, sound: true, critical: true);
 
     // Note: Android 13+ permissions are requested in the AndroidManifest.xml
 
@@ -102,13 +102,12 @@ class NotificationService {
     print('Scheduled for: ${scheduledDate.toString()}');
 
     if (scheduledDate.isBefore(DateTime.now())) {
-      // If the scheduled date is in the past, just show the notification immediately
+      print('Scheduled date is in the past. Sending immediate notification.');
       await showImmediateNotification(id: id, title: title, body: body);
       return;
     }
 
     try {
-      // Schedule the notification
       await _flutterLocalNotificationsPlugin.zonedSchedule(
         id,
         title,
@@ -134,14 +133,14 @@ class NotificationService {
             badgeNumber: 1,
           ),
         ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        matchDateTimeComponents: DateTimeComponents.time,
-        payload: 'medicine_reminder_$id',
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
+        matchDateTimeComponents: DateTimeComponents.dateAndTime,
+        payload: 'medicine_reminder_$id'
       );
       print('Notification scheduled successfully for $scheduledDate');
     } catch (e) {
       print('Error scheduling notification: $e');
-      // If scheduling fails, attempt to show immediately as a fallback
+      print('Fallback: Sending immediate notification.');
       await showImmediateNotification(id: id, title: title, body: body);
     }
   }
@@ -211,7 +210,7 @@ class NotificationService {
           .resolvePlatformSpecificImplementation<
             IOSFlutterLocalNotificationsPlugin
           >()
-          ?.requestPermissions(alert: true, badge: true, sound: true);
+          ?.requestPermissions(alert: true, badge: true, sound: true, critical: true);
       return result ?? false;
     }
     // For Android

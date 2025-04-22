@@ -41,6 +41,9 @@ class ReminderService {
       reminder.time.minute,
     );
 
+    print('Adding reminder with ID: ${reminder.id}');
+    print('Notification scheduled for: $notificationTime');
+
     // Check if the notification time is in the future
     if (notificationTime.isAfter(DateTime.now())) {
       await notificationService.scheduleNotification(
@@ -75,6 +78,9 @@ class ReminderService {
         updatedReminder.time.hour,
         updatedReminder.time.minute,
       );
+
+      print('Updating reminder with ID: ${updatedReminder.id}');
+      print('Updated notification scheduled for: $notificationTime');
 
       // Check if the notification time is in the future
       if (notificationTime.isAfter(DateTime.now())) {
